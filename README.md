@@ -74,9 +74,9 @@ Este projeto serve como um ponto inicial para explorar o desenvolvimento de APIs
 
 - [ ] Validação: Adicione validação de dados para garantir que as informações inseridas pelos usuários sejam corretas e completas.
 
-- [ ] Documentação: Documente sua API usando padrões como OpenAPI ou Swagger, isso tornará mais fácil para outros desenvolvedores entenderem como usar sua API.
+- [X] Documentação: Documente sua API usando padrões como OpenAPI ou Swagger, isso tornará mais fácil para outros desenvolvedores entenderem como usar sua API.
 
-- [ ] Testes: Escreva testes unitários e de integração para garantir que sua API funcione como esperado, mesmo após futuras atualizações.
+- [X] Testes: Escreva testes unitários e de integração para garantir que sua API funcione como esperado, mesmo após futuras atualizações.
 
 - [ ] Filtro e Ordenação: Implemente funcionalidades de filtragem e ordenação para que os usuários possam buscar restaurantes com base em diferentes critérios, como classificação média, tipo de cozinha ou localização.
 
