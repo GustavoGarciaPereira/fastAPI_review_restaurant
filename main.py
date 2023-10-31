@@ -1,11 +1,14 @@
 import os
 
-from fastapi import FastAPI, HTTPException, status, Query
+from fastapi import FastAPI, HTTPException, status, Query, Request
 from pydantic import BaseModel
 from tinydb import TinyDB, Query as TinyDBQuery
+from fastapi.templating import Jinja2Templates
+
 
 # Inicialize o FastAPI e o TinyDB
 app = FastAPI()
+templates = Jinja2Templates(directory="templates")
 # Obtenha o caminho do banco de dados da variável de ambiente ou use um padrão
 db_path = os.environ.get('DB_PATH', 'db.json')
 db = TinyDB(db_path)
@@ -75,3 +78,8 @@ async def read_reviews(restaurant_id: int = Query(None), review_id: int = Query(
     else:
         reviews = db.table('reviews').all()
         return reviews
+
+@app.get("/dashboard")
+async def read_dashboard(request: Request):
+    reviews = db.table('reviews').all()
+    return templates.TemplateResponse("dashboard.html", {"request": request, "reviews": reviews})

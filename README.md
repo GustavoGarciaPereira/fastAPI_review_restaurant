@@ -28,7 +28,7 @@ bashCopy code
 
 
 ![Endpoints](./img.png)
-
+![chats](./img2.png)
 ## Testes
 
 Para executar os testes e verificar a cobertura, use o seguinte comando:

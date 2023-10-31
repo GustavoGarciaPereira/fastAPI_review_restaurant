@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<canvas id="reviewsChart"></canvas>
+
+<script type="text/javascript">
+    const reviews = {{ reviews | tojson | safe }};
+    const labels = reviews.map(review => review.restaurant_id);  // Supondo que cada revisão tenha um 'restaurant_id'
+    const data = reviews.map(review => review.rating);  // Supondo que cada revisão tenha um 'rating'
+
+    var ctx = document.getElementById('reviewsChart').getContext('2d');
+    var myChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Ratings by Restaurant',
+                data: data,
+                borderWidth: 1
+            }]
+        },
+    });
+</script>
+
+</body>
+</html>
