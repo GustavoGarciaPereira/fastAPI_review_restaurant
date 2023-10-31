@@ -1,85 +1,111 @@
 import os
-
 from fastapi import FastAPI, HTTPException, status, Query, Request
 from pydantic import BaseModel
 from tinydb import TinyDB, Query as TinyDBQuery
 from fastapi.templating import Jinja2Templates
 
-
-# Inicialize o FastAPI e o TinyDB
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
-# Obtenha o caminho do banco de dados da variável de ambiente ou use um padrão
 db_path = os.environ.get('DB_PATH', 'db.json')
 db = TinyDB(db_path)
+
 
 class Restaurant(BaseModel):
     name: str
     address: str
     cuisine: str
 
+
 class Review(BaseModel):
     rating: float
     comment: str
 
+
+class RestaurantRepository:
+    table = db.table('restaurants')
+
+    @classmethod
+    def create(cls, restaurant: Restaurant) -> dict:
+        restaurant_id = len(cls.table) + 1
+        cls.table.insert({'id': restaurant_id, **restaurant.dict()})
+        return {'id': restaurant_id, **restaurant.dict()}
+
+    @classmethod
+    def get(cls, restaurant_id: int) -> dict:
+        return cls.table.get(doc_id=restaurant_id)
+
+    @classmethod
+    def get_all(cls) -> list:
+        return cls.table.all()
+
+
+class ReviewRepository:
+    table = db.table('reviews')
+
+    @classmethod
+    def create(cls, restaurant_id: int, review: Review) -> dict:
+        review_id = len(cls.table) + 1
+        cls.table.insert({'id': review_id, 'restaurant_id': restaurant_id, **review.dict()})
+        return {'id': review_id, **review.dict()}
+
+    @classmethod
+    def get(cls, review_id: int) -> dict:
+        query = TinyDBQuery()
+        return cls.table.get(query.id == review_id)
+
+    @classmethod
+    def get_by_restaurant(cls, restaurant_id: int) -> list:
+        query = TinyDBQuery()
+        return cls.table.search(query.restaurant_id == restaurant_id)
+
+    @classmethod
+    def get_all(cls) -> list:
+        return cls.table.all()
+
+
 @app.post("/restaurants/")
 async def create_restaurant(restaurant: Restaurant):
-    restaurant_id = len(db.table('restaurants')) + 1
-    db.table('restaurants').insert({'id': restaurant_id, **restaurant.model_dump()})
-    return {"id": restaurant_id, **restaurant.model_dump()}
+    return RestaurantRepository.create(restaurant)
+
 
 @app.get("/restaurants/{restaurant_id}")
 async def read_restaurant(restaurant_id: int):
-    restaurant = db.table('restaurants').get(doc_id=restaurant_id)
+    restaurant = RestaurantRepository.get(restaurant_id)
     if restaurant is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Restaurant not found")
     return restaurant
 
 
 @app.get("/restaurants/")
-async def read_restaurant():
-    restaurant = db.table('restaurants').all()
-    if restaurant is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Restaurant not found")
-    return restaurant
+async def read_all_restaurants():
+    return RestaurantRepository.get_all()
 
 
 @app.post("/restaurants/{restaurant_id}/reviews/")
 async def create_review(restaurant_id: int, review: Review):
-    # Verifique se o restaurante existe
-    restaurant = db.table('restaurants').get(doc_id=restaurant_id)
+    restaurant = RestaurantRepository.get(restaurant_id)
     if restaurant is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Restaurant not found")
-    
-    # Crie uma nova avaliação e associe-a ao restaurante
-    review_id = len(db.table('reviews')) + 1
-    db.table('reviews').insert({'id': review_id, 'restaurant_id': restaurant_id, **review.model_dump()})
-    
-    return {"message": "Review added successfully", "review_id": review_id, **review.model_dump()}
+    return ReviewRepository.create(restaurant_id, review)
+
 
 @app.get("/reviews/")
-async def read_reviews(restaurant_id: int = Query(None), review_id: int = Query(None)):
-    # Cria uma nova instância de TinyDBQuery para construir consultas
-    query = TinyDBQuery()
-    
-    # Se um review_id é fornecido, retorne a avaliação específica
-    if review_id is not None:
-        review = db.table('reviews').get(query.id == review_id)
-        if review is None:
+async def read_reviews(
+    restaurant_id: int = Query(None),
+    review_id: int = Query(None)
+):
+    if review_id:
+        review = ReviewRepository.get(review_id)
+        if not review:
             raise HTTPException(status_code=404, detail="Review not found")
-        return [review]  # Retorne uma lista contendo a avaliação específica
-    
-    # Se um restaurant_id é fornecido, retorne todas as avaliações para aquele restaurante
-    elif restaurant_id is not None:
-        reviews = db.table('reviews').search(query.restaurant_id == restaurant_id)
-        return reviews
-    
-    # Se nenhum ID é fornecido, retorne todas as avaliações
+        return [review]
+    elif restaurant_id:
+        return ReviewRepository.get_by_restaurant(restaurant_id)
     else:
-        reviews = db.table('reviews').all()
-        return reviews
+        return ReviewRepository.get_all()
+
 
 @app.get("/dashboard")
 async def read_dashboard(request: Request):
-    reviews = db.table('reviews').all()
+    reviews = ReviewRepository.get_all()
     return templates.TemplateResponse("dashboard.html", {"request": request, "reviews": reviews})
