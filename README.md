@@ -25,7 +25,7 @@ bashCopy code
 -   `GET /restaurants/`: Retorna todos os restaurantes.
 -   `POST /restaurants/{restaurant_id}/reviews/`: Adiciona uma avaliação a um restaurante específico.
 -   `GET /reviews/`: Retorna avaliações baseado em filtros opcionais de `restaurant_id` e `review_id`.
-
+-   `GET /dashboard/`: monta uma pequena dashboard com as notas dos restaurantes.
 
 ![Endpoints](./img.png)
 ![chats](./img2.png)
