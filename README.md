@@ -27,7 +27,7 @@ bashCopy code
 -   `GET /reviews/`: Retorna avaliações baseado em filtros opcionais de `restaurant_id` e `review_id`.
 
 
-![Endpoints](./Screenshot%20from%202023-10-30%2022-25-43.png)
+![Endpoints](./img.png)
 
 ## Testes
 
